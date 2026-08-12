@@ -3,41 +3,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0a1826">
+<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
 <title>Nearest Microwave — UC Berkeley</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Share+Tech+Mono&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <style>
   :root {
-    /* appliance chassis, tinted with Berkeley Blue instead of neutral gray */
-    --steel: #dcd9d1;
-    --steel-2: #c7cbc6;
-    --panel: #0f2439;
-    --panel-2: #163050;
-    --glass: #071522;
-    /* LED readout uses California Gold, not an arbitrary amber */
-    --led: #FDB515;
-    --led-dim: rgba(253, 181, 21, 0.28);
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --border: #e2e5ea;
+    --text: #14213d;
+    --muted: #5b6472;
     /* UC Berkeley brand colors */
-    --gold: #FDB515;      /* California Gold */
-    --cal-blue: #3B7EA1;  /* Founders Rock */
+    --heading: #003262;      /* Berkeley Blue, on light surfaces */
+    --accent-ink: #2f6a8c;   /* Founders Rock, darkened for AA text/border contrast */
+    --focus-ring: #3B7EA1;   /* Founders Rock, official — non-text use only */
+    --gold: #FDB515;         /* California Gold */
     --berkeley-blue: #003262;
-    /* sticky-note help */
-    --paper: #f6ecc4;
-    --ink: #3a3226;
-    /* panel text */
-    --text-panel: #edeef1;
-    --muted-panel: #9aa6b3;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --steel: #0d1720;
-      --steel-2: #070c11;
-      --panel: #0a1826;
-      --panel-2: #11253c;
+      --bg: #0b1220;
+      --card: #121a2b;
+      --border: rgba(255,255,255,0.09);
+      --text: #eef1f5;
+      --muted: #9aa6b3;
+      --heading: #bfe0f2;
+      --accent-ink: #7fb8d8;
     }
   }
   * { box-sizing: border-box; }
@@ -45,164 +41,135 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     margin: 0;
     min-height: 100dvh;
-    background:
-      repeating-linear-gradient(125deg, var(--steel-2) 0 1px, var(--steel) 1px 5px);
-    color: var(--text-panel);
+    background: var(--bg);
+    color: var(--text);
     display: flex;
     justify-content: center;
     padding: env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 24px);
   }
-  main { width: 100%; max-width: 440px; padding-top: 40px; }
+  main { width: 100%; max-width: 440px; padding-top: 48px; }
 
-  .appliance {
-    position: relative;
-    overflow: hidden;
-    background: var(--panel);
-    border-radius: 28px;
-    padding: 22px 20px 24px;
-    border: 1px solid rgba(255,255,255,0.06);
-    box-shadow:
-      0 24px 60px rgba(0,0,0,0.35),
-      inset 0 1px 0 rgba(255,255,255,0.06);
-  }
-  .vents {
-    height: 16px;
-    margin: -22px -20px 20px;
-    background: repeating-linear-gradient(180deg, rgba(0,0,0,0.6) 0 2px, transparent 2px 6px);
-    opacity: 0.85;
+  .card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 24px 22px 26px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 16px 40px rgba(0,0,0,0.08);
   }
 
   h1 {
     font-family: 'Oswald', sans-serif;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--text-panel);
+    letter-spacing: 0.02em;
+    color: var(--heading);
     text-align: center;
-    font-size: 1.35rem;
+    font-size: 1.3rem;
     margin: 0 0 6px;
   }
   .subtitle {
     text-align: center;
-    color: var(--muted-panel);
-    font-size: 0.88rem;
+    color: var(--muted);
+    font-size: 0.9rem;
     margin: 0 0 20px;
     line-height: 1.4;
   }
 
-  .window {
-    padding: 6px;
-    background: var(--panel-2);
-    border-radius: 18px;
-    border: 3px solid rgba(0,0,0,0.35);
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+  .map-frame {
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    overflow: hidden;
     margin-bottom: 18px;
   }
-  #map { height: 240px; border-radius: 13px; }
+  #map { height: 240px; }
 
-  .display {
-    background: var(--glass);
-    border-radius: 12px;
-    padding: 14px 16px 12px;
-    border: 1px solid rgba(253,181,21,0.18);
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.7);
-    margin-bottom: 14px;
-  }
-  .display-label {
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.66rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--muted-panel);
-    display: block;
-    margin-bottom: 2px;
-  }
-  .display-time {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 2.4rem;
-    letter-spacing: 0.04em;
-    color: var(--led);
-    text-shadow: 0 0 10px var(--led-dim), 0 0 2px var(--led);
-    line-height: 1.1;
-  }
-  .display-time.blink { animation: blink 0.6s steps(1) infinite; }
-  .display-time.settle { animation: settle 0.5s ease; }
-  @keyframes blink { 50% { opacity: 0.15; } }
-  @keyframes settle {
-    0% { text-shadow: 0 0 22px var(--led), 0 0 8px var(--led); }
-    100% { text-shadow: 0 0 10px var(--led-dim), 0 0 2px var(--led); }
+  .privacy-note {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.76rem;
+    line-height: 1.4;
+    margin: 12px 0 0;
   }
 
   button#go {
     width: 100%;
     padding: 15px;
     font-family: 'Oswald', sans-serif;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     border: none;
     border-radius: 999px;
     background: var(--gold);
-    color: #2a1d00;
-    box-shadow: 0 8px 22px rgba(253,181,21,0.35);
-    transition: transform 0.1s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+    color: var(--berkeley-blue);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    transition: transform 0.1s ease, opacity 0.2s ease;
   }
   button#go:active { transform: scale(0.98); }
-  button#go:disabled { opacity: 0.65; box-shadow: none; }
-  button#go:focus-visible { outline: 3px solid var(--cal-blue); outline-offset: 3px; }
+  button#go:disabled { opacity: 0.6; }
+  button#go:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
 
   #status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     text-align: center;
-    color: var(--muted-panel);
+    color: var(--muted);
     font-size: 0.85rem;
     margin: 12px 0 0;
     min-height: 1.2em;
   }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent-ink);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex: 0 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   #result {
     margin-top: 18px;
     padding: 18px;
     border-radius: 14px;
-    background: var(--panel-2);
-    border: 1px dashed rgba(253,181,21,0.35);
+    background: var(--bg);
+    border: 1px solid var(--border);
     display: none;
     opacity: 0;
-    transform: translateY(8px);
-    transition: opacity 0.35s ease, transform 0.35s ease;
+    transform: translateY(6px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
   }
   #result.show { display: block; opacity: 1; transform: translateY(0); }
 
   .r-eyebrow {
     font-family: 'Oswald', sans-serif;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     font-size: 0.68rem;
     font-weight: 600;
-    color: var(--gold);
+    color: var(--heading);
     margin: 0 0 6px;
   }
   #r-name {
-    font-family: 'Oswald', sans-serif;
     font-weight: 600;
     margin: 0 0 8px;
     font-size: 1.1rem;
     line-height: 1.3;
-    color: var(--text-panel);
+    color: var(--text);
   }
-  .r-dist-pill {
-    display: inline-block;
-    font-family: 'Share Tech Mono', monospace;
-    background: rgba(253,181,21,0.12);
-    color: var(--led);
-    font-size: 0.82rem;
-    padding: 4px 10px;
-    border-radius: 999px;
-    margin-bottom: 12px;
+  #r-name:focus-visible { outline: none; }
+  .r-dist {
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--heading);
+    margin: 0 0 10px;
   }
   #r-notes {
     margin: 0 0 16px;
-    color: var(--muted-panel);
+    color: var(--muted);
     font-size: 0.9rem;
     line-height: 1.45;
   }
@@ -214,23 +181,20 @@
     width: 100%;
     padding: 12px;
     background: transparent;
-    color: var(--gold);
-    border: 2px solid var(--gold);
+    color: var(--accent-ink);
+    border: 2px solid var(--accent-ink);
     text-decoration: none;
-    font-family: 'Oswald', sans-serif;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
     border-radius: 10px;
-    font-size: 0.88rem;
+    font-size: 0.9rem;
     transition: background 0.15s ease, color 0.15s ease;
   }
-  #r-link:hover { background: var(--gold); color: #2a1d00; }
-  #r-link:focus-visible { outline: 3px solid var(--cal-blue); outline-offset: 3px; }
+  #r-link:hover { background: var(--accent-ink); color: #fff; }
+  #r-link:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
 
   #help { margin-top: 16px; font-size: 0.85rem; }
   #help summary {
-    color: var(--muted-panel);
+    color: var(--muted);
     text-align: center;
     cursor: pointer;
     list-style: none;
@@ -238,62 +202,46 @@
   #help summary::-webkit-details-marker { display: none; }
   #help summary::after { content: " ›"; }
   #help[open] summary::after { content: " ‹"; }
-  #help summary:focus-visible { outline: 2px solid var(--cal-blue); outline-offset: 3px; }
+  #help summary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
 
-  .sticky-note {
-    position: relative;
-    margin: 16px 4px 2px;
-    padding: 16px 16px 14px;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: 'Caveat', cursive;
-    font-weight: 600;
-    font-size: 1.15rem;
-    line-height: 1.35;
-    border-radius: 2px;
-    transform: rotate(-1.4deg);
-    box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+  .help-note {
+    margin: 10px 0 0;
+    padding: 14px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
   }
-  .sticky-note::before {
-    content: "";
-    position: absolute;
-    top: -10px; left: 50%;
-    width: 46px; height: 18px;
-    margin-left: -23px;
-    background: rgba(255,255,255,0.55);
-    border: 1px solid rgba(255,255,255,0.4);
-    transform: rotate(-2deg);
-  }
-  .sticky-note strong { font-weight: 700; }
+  .help-note strong { color: var(--text); font-weight: 600; }
 
   footer {
     text-align: center;
-    font-family: 'Share Tech Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted-panel);
-    font-size: 0.66rem;
+    color: var(--muted);
+    font-size: 0.74rem;
+    line-height: 1.5;
     margin-top: 20px;
-    opacity: 0.8;
+    opacity: 0.85;
   }
 
   .mw-pin {
     width: 13px; height: 13px; border-radius: 50%;
     background: var(--gold);
-    border: 2px solid #2a1d00;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    border: 2px solid var(--berkeley-blue);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
   }
   .you-pin {
     width: 16px; height: 16px; border-radius: 50%;
-    background: var(--cal-blue); border: 3px solid white;
-    box-shadow: 0 0 0 2px var(--cal-blue), 0 2px 6px rgba(0,0,0,0.4);
+    background: var(--focus-ring); border: 3px solid white;
+    box-shadow: 0 0 0 2px var(--focus-ring), 0 2px 6px rgba(0,0,0,0.3);
   }
   .leaflet-control-zoom a {
-    background: var(--panel-2) !important;
-    color: var(--text-panel) !important;
-    border-color: rgba(255,255,255,0.1) !important;
+    background: var(--card) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
   }
-  .leaflet-control-zoom { border: none !important; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .leaflet-control-zoom { border: none !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
   .leaflet-popup-content-wrapper { border-radius: 10px; }
   .leaflet-popup-content strong { font-family: 'Oswald', sans-serif; }
 
@@ -304,40 +252,33 @@
 </head>
 <body>
 <main>
-  <div class="appliance">
-    <div class="vents" aria-hidden="true"></div>
+  <div class="card">
     <h1>Nearest Microwave</h1>
-    <p class="subtitle">Punch in your location, find the closest reheat spot on campus.</p>
+    <p class="subtitle">Find the closest place on campus to reheat your food.</p>
 
-    <div class="window">
+    <div class="map-frame">
       <div id="map"></div>
     </div>
 
-    <div class="display">
-      <span class="display-label" id="display-label">Ready</span>
-      <span class="display-time" id="display-time">--:--</span>
-    </div>
-
-    <button id="go">
-      <span class="btn-label">Start</span>
-    </button>
+    <button id="go">Find my nearest microwave</button>
     <p id="status" role="status" aria-live="polite"></p>
+    <p class="privacy-note">Uses your device location once, in your browser only — nothing is stored or sent anywhere.</p>
 
     <div id="result" aria-live="polite">
       <p class="r-eyebrow">Closest to you</p>
-      <h2 id="r-name"></h2>
-      <span class="r-dist-pill" id="r-dist"></span>
+      <h2 id="r-name" tabindex="-1"></h2>
+      <p class="r-dist" id="r-dist"></p>
       <p id="r-notes"></p>
       <a id="r-link" target="_blank" rel="noopener">Get directions →</a>
     </div>
 
     <details id="help">
       <summary>Location blocked or not working?</summary>
-      <p class="sticky-note">On iPhone: <strong>Settings → Privacy &amp; Security → Location Services → Safari Websites</strong> → set to <strong>"Ask Next Time"</strong>, then reload this page and hit Start again. (Don't see "Safari Websites"? Try <strong>Settings → Apps → Safari → Location</strong> instead.) — mgmt</p>
+      <p class="help-note">On iPhone: <strong>Settings → Privacy &amp; Security → Location Services → Safari Websites</strong> → set to <strong>"Ask Next Time"</strong>, then reload this page and try again. Don't see "Safari Websites"? Try <strong>Settings → Apps → Safari → Location</strong> instead.</p>
     </details>
   </div>
 
-  <footer>Model NM-2026 · UC Berkeley · Data: food.berkeley.edu foodscape map</footer>
+  <footer>UC Berkeley · Microwave locations verified Aug 11, 2026 from food.berkeley.edu — a spot may have moved since.</footer>
 </main>
 
 <script>
@@ -380,9 +321,6 @@ function formatWalk(seconds) {
 const btn = document.getElementById('go');
 const status = document.getElementById('status');
 const result = document.getElementById('result');
-const displayLabel = document.getElementById('display-label');
-const displayTime = document.getElementById('display-time');
-const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // map center: centroid of the microwave points
 const CENTER = [
@@ -391,17 +329,6 @@ const CENTER = [
 ];
 
 let map, markers = {}, youMarker, youIcon, mwIcon;
-let scrambleId = null;
-
-function startScramble() {
-  if (reduceMotion) return;
-  scrambleId = setInterval(() => {
-    displayTime.textContent = `${Math.floor(Math.random() * 9)}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`;
-  }, 80);
-}
-function stopScramble() {
-  if (scrambleId) { clearInterval(scrambleId); scrambleId = null; }
-}
 
 function initMap() {
   map = L.map('map', { zoomControl: false }).setView(CENTER, 15);
@@ -421,17 +348,25 @@ function initMap() {
   youIcon = L.divIcon({ className: '', html: '<div class="you-pin"></div>', iconSize: [16, 16] });
 }
 
+function setStatus(text, showSpinner) {
+  status.innerHTML = '';
+  if (showSpinner) {
+    const spinner = document.createElement('span');
+    spinner.className = 'spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+    status.appendChild(spinner);
+  }
+  status.appendChild(document.createTextNode(text));
+}
+
 btn.addEventListener('click', () => {
   if (!navigator.geolocation) {
-    status.textContent = "Geolocation isn't supported on this browser.";
+    setStatus("Geolocation isn't supported on this browser.", false);
     return;
   }
   btn.disabled = true;
-  status.textContent = '';
   result.classList.remove('show');
-  displayTime.classList.remove('blink', 'settle');
-  displayLabel.textContent = 'Locating…';
-  startScramble();
+  setStatus('Locating your position…', true);
 
   navigator.geolocation.getCurrentPosition(pos => {
     const { latitude, longitude } = pos.coords;
@@ -440,19 +375,19 @@ btn.addEventListener('click', () => {
       const d = haversineMeters(latitude, longitude, m.lat, m.lon);
       if (d < best) { best = d; nearest = m; }
     }
-    stopScramble();
     const walkSec = best / WALK_MPS;
-    displayLabel.textContent = 'Walk time';
-    displayTime.textContent = formatWalk(walkSec);
-    displayTime.classList.add('settle');
+    setStatus('', false);
 
     document.getElementById('r-name').textContent = nearest.name;
     document.getElementById('r-notes').textContent = nearest.notes;
-    document.getElementById('r-dist').textContent = `${formatWalk(walkSec)} walk · ${Math.round(best)} m`;
+    document.getElementById('r-dist').textContent = `${formatWalk(walkSec)} min walk · ${Math.round(best)} m`;
     document.getElementById('r-link').href =
       `https://www.google.com/maps/dir/?api=1&destination=${nearest.lat},${nearest.lon}&travelmode=walking`;
     result.style.display = 'block';
-    requestAnimationFrame(() => result.classList.add('show'));
+    requestAnimationFrame(() => {
+      result.classList.add('show');
+      document.getElementById('r-name').focus();
+    });
     btn.disabled = false;
 
     if (youMarker) youMarker.setLatLng([latitude, longitude]);
@@ -460,13 +395,12 @@ btn.addEventListener('click', () => {
     map.fitBounds([[latitude, longitude], [nearest.lat, nearest.lon]], { padding: [40, 40], maxZoom: 17 });
     markers[nearest.name].openPopup();
   }, err => {
-    stopScramble();
-    displayLabel.textContent = 'Error';
-    displayTime.textContent = 'Err';
-    displayTime.classList.add('blink');
-    status.textContent = err.code === err.PERMISSION_DENIED
-      ? "Location blocked. On iPhone: Settings → Privacy & Security → Location Services → Safari Websites → \"Ask Next Time\", then reload and try again."
-      : "Couldn't get your location: " + err.message;
+    setStatus(
+      err.code === err.PERMISSION_DENIED
+        ? "Location blocked. On iPhone: Settings → Privacy & Security → Location Services → Safari Websites → \"Ask Next Time\", then reload and try again."
+        : "Couldn't get your location: " + err.message,
+      false
+    );
     btn.disabled = false;
   }, { enableHighAccuracy: true, timeout: 10000 });
 });
