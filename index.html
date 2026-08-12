@@ -157,6 +157,29 @@
     font-size: 0.95rem;
   }
 
+  #help {
+    margin-top: 14px;
+    font-size: 0.85rem;
+  }
+  #help summary {
+    color: rgba(255,255,255,0.85);
+    text-align: center;
+    cursor: pointer;
+    list-style: none;
+  }
+  #help summary::-webkit-details-marker { display: none; }
+  #help summary::after { content: " ›"; }
+  #help[open] summary::after { content: " ‹"; }
+  #help p {
+    margin: 10px 0 0;
+    padding: 12px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
   footer {
     text-align: center;
     color: rgba(255,255,255,0.5);
@@ -192,6 +215,11 @@
     <span class="btn-label">Find nearest microwave</span>
   </button>
   <p id="status"></p>
+
+  <details id="help">
+    <summary>Location blocked or not working?</summary>
+    <p>On iPhone: <strong>Settings → Privacy &amp; Security → Location Services → Safari Websites</strong> → set to <strong>"Ask Next Time"</strong>, then reload this page and tap the button again. (If you don't see "Safari Websites" there, try <strong>Settings → Apps → Safari → Location</strong> instead.)</p>
+  </details>
 
   <div id="result">
     <p class="r-eyebrow">Closest to you</p>
