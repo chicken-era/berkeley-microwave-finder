@@ -3,28 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#003262">
+<meta name="theme-color" content="#0a1826">
 <title>Nearest Microwave — UC Berkeley</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Share+Tech+Mono&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <style>
   :root {
-    --blue: #003262;
-    --blue-light: #00538c;
-    --gold: #FDB515;
-    --bg: #f2f4f7;
-    --card: #ffffff;
-    --text: #1a1a1a;
-    --muted: #6b7280;
-    --border: #e6e8ec;
+    /* appliance chassis, tinted with Berkeley Blue instead of neutral gray */
+    --steel: #dcd9d1;
+    --steel-2: #c7cbc6;
+    --panel: #0f2439;
+    --panel-2: #163050;
+    --glass: #071522;
+    /* LED readout uses California Gold, not an arbitrary amber */
+    --led: #FDB515;
+    --led-dim: rgba(253, 181, 21, 0.28);
+    /* UC Berkeley brand colors */
+    --gold: #FDB515;      /* California Gold */
+    --cal-blue: #3B7EA1;  /* Founders Rock */
+    --berkeley-blue: #003262;
+    /* sticky-note help */
+    --paper: #f6ecc4;
+    --ink: #3a3226;
+    /* panel text */
+    --text-panel: #edeef1;
+    --muted-panel: #9aa6b3;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0e1116;
-      --card: #171b22;
-      --text: #f2f3f5;
-      --muted: #9aa3af;
-      --border: #262b33;
+      --steel: #0d1720;
+      --steel-2: #070c11;
+      --panel: #0a1826;
+      --panel-2: #11253c;
     }
   }
   * { box-sizing: border-box; }
@@ -33,80 +46,126 @@
     margin: 0;
     min-height: 100dvh;
     background:
-      radial-gradient(1200px 600px at 50% -10%, var(--blue-light) 0%, var(--blue) 45%, var(--bg) 46%) fixed;
-    color: var(--text);
+      repeating-linear-gradient(125deg, var(--steel-2) 0 1px, var(--steel) 1px 5px);
+    color: var(--text-panel);
     display: flex;
     justify-content: center;
-    padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+    padding: env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 24px);
   }
-  main { width: 100%; max-width: 440px; padding-top: 56px; padding-bottom: 40px; }
+  main { width: 100%; max-width: 440px; padding-top: 40px; }
 
-  .badge {
-    width: 64px; height: 64px; border-radius: 50%;
-    background: var(--gold);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 30px;
-    margin: 0 auto 16px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  .appliance {
+    position: relative;
+    overflow: hidden;
+    background: var(--panel);
+    border-radius: 28px;
+    padding: 22px 20px 24px;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow:
+      0 24px 60px rgba(0,0,0,0.35),
+      inset 0 1px 0 rgba(255,255,255,0.06);
   }
+  .vents {
+    height: 16px;
+    margin: -22px -20px 20px;
+    background: repeating-linear-gradient(180deg, rgba(0,0,0,0.6) 0 2px, transparent 2px 6px);
+    opacity: 0.85;
+  }
+
   h1 {
-    color: white;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-panel);
     text-align: center;
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     margin: 0 0 6px;
-    letter-spacing: -0.01em;
   }
   .subtitle {
     text-align: center;
-    color: rgba(255,255,255,0.75);
-    font-size: 0.95rem;
-    margin: 0 0 28px;
+    color: var(--muted-panel);
+    font-size: 0.88rem;
+    margin: 0 0 20px;
     line-height: 1.4;
+  }
+
+  .window {
+    padding: 6px;
+    background: var(--panel-2);
+    border-radius: 18px;
+    border: 3px solid rgba(0,0,0,0.35);
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+    margin-bottom: 18px;
+  }
+  #map { height: 240px; border-radius: 13px; }
+
+  .display {
+    background: var(--glass);
+    border-radius: 12px;
+    padding: 14px 16px 12px;
+    border: 1px solid rgba(253,181,21,0.18);
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.7);
+    margin-bottom: 14px;
+  }
+  .display-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted-panel);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .display-time {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 2.4rem;
+    letter-spacing: 0.04em;
+    color: var(--led);
+    text-shadow: 0 0 10px var(--led-dim), 0 0 2px var(--led);
+    line-height: 1.1;
+  }
+  .display-time.blink { animation: blink 0.6s steps(1) infinite; }
+  .display-time.settle { animation: settle 0.5s ease; }
+  @keyframes blink { 50% { opacity: 0.15; } }
+  @keyframes settle {
+    0% { text-shadow: 0 0 22px var(--led), 0 0 8px var(--led); }
+    100% { text-shadow: 0 0 10px var(--led-dim), 0 0 2px var(--led); }
   }
 
   button#go {
     width: 100%;
-    padding: 16px;
+    padding: 15px;
+    font-family: 'Oswald', sans-serif;
     font-size: 1.05rem;
     font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     border: none;
-    border-radius: 14px;
+    border-radius: 999px;
     background: var(--gold);
-    color: var(--blue);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    transition: transform 0.1s ease, opacity 0.2s ease;
+    color: #2a1d00;
+    box-shadow: 0 8px 22px rgba(253,181,21,0.35);
+    transition: transform 0.1s ease, opacity 0.2s ease, box-shadow 0.2s ease;
   }
   button#go:active { transform: scale(0.98); }
-  button#go:disabled { opacity: 0.7; }
-
-  .spinner {
-    width: 18px; height: 18px;
-    border: 2.5px solid rgba(0,50,98,0.25);
-    border-top-color: var(--blue);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: none;
-  }
-  button#go.loading .spinner { display: inline-block; }
-  button#go.loading .btn-label { opacity: 0.8; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  button#go:disabled { opacity: 0.65; box-shadow: none; }
+  button#go:focus-visible { outline: 3px solid var(--cal-blue); outline-offset: 3px; }
 
   #status {
     text-align: center;
-    color: rgba(255,255,255,0.85);
-    font-size: 0.9rem;
-    margin: 14px 0 0;
+    color: var(--muted-panel);
+    font-size: 0.85rem;
+    margin: 12px 0 0;
     min-height: 1.2em;
   }
 
   #result {
-    margin-top: 22px;
-    padding: 20px;
-    border-radius: 16px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    margin-top: 18px;
+    padding: 18px;
+    border-radius: 14px;
+    background: var(--panel-2);
+    border: 1px dashed rgba(253,181,21,0.35);
     display: none;
     opacity: 0;
     transform: translateY(8px);
@@ -115,31 +174,36 @@
   #result.show { display: block; opacity: 1; transform: translateY(0); }
 
   .r-eyebrow {
+    font-family: 'Oswald', sans-serif;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 0.72rem;
-    font-weight: 700;
+    letter-spacing: 0.1em;
+    font-size: 0.68rem;
+    font-weight: 600;
     color: var(--gold);
     margin: 0 0 6px;
   }
-  #r-name { margin: 0 0 8px; font-size: 1.2rem; line-height: 1.3; }
+  #r-name {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    margin: 0 0 8px;
+    font-size: 1.1rem;
+    line-height: 1.3;
+    color: var(--text-panel);
+  }
   .r-dist-pill {
     display: inline-block;
-    background: rgba(0,50,98,0.08);
-    color: var(--blue);
-    font-weight: 600;
-    font-size: 0.85rem;
+    font-family: 'Share Tech Mono', monospace;
+    background: rgba(253,181,21,0.12);
+    color: var(--led);
+    font-size: 0.82rem;
     padding: 4px 10px;
     border-radius: 999px;
     margin-bottom: 12px;
   }
-  @media (prefers-color-scheme: dark) {
-    .r-dist-pill { background: rgba(253,181,21,0.15); color: var(--gold); }
-  }
   #r-notes {
-    margin: 0 0 18px;
-    color: var(--muted);
-    font-size: 0.92rem;
+    margin: 0 0 16px;
+    color: var(--muted-panel);
+    font-size: 0.9rem;
     line-height: 1.45;
   }
   #r-link {
@@ -148,21 +212,25 @@
     justify-content: center;
     gap: 6px;
     width: 100%;
-    padding: 13px;
-    background: var(--blue);
-    color: white;
+    padding: 12px;
+    background: transparent;
+    color: var(--gold);
+    border: 2px solid var(--gold);
     text-decoration: none;
+    font-family: 'Oswald', sans-serif;
     font-weight: 600;
-    border-radius: 12px;
-    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    transition: background 0.15s ease, color 0.15s ease;
   }
+  #r-link:hover { background: var(--gold); color: #2a1d00; }
+  #r-link:focus-visible { outline: 3px solid var(--cal-blue); outline-offset: 3px; }
 
-  #help {
-    margin-top: 14px;
-    font-size: 0.85rem;
-  }
+  #help { margin-top: 16px; font-size: 0.85rem; }
   #help summary {
-    color: rgba(255,255,255,0.85);
+    color: var(--muted-panel);
     text-align: center;
     cursor: pointer;
     list-style: none;
@@ -170,66 +238,106 @@
   #help summary::-webkit-details-marker { display: none; }
   #help summary::after { content: " ›"; }
   #help[open] summary::after { content: " ‹"; }
-  #help p {
-    margin: 10px 0 0;
-    padding: 12px 14px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    color: var(--muted);
-    line-height: 1.5;
+  #help summary:focus-visible { outline: 2px solid var(--cal-blue); outline-offset: 3px; }
+
+  .sticky-note {
+    position: relative;
+    margin: 16px 4px 2px;
+    padding: 16px 16px 14px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Caveat', cursive;
+    font-weight: 600;
+    font-size: 1.15rem;
+    line-height: 1.35;
+    border-radius: 2px;
+    transform: rotate(-1.4deg);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.35);
   }
+  .sticky-note::before {
+    content: "";
+    position: absolute;
+    top: -10px; left: 50%;
+    width: 46px; height: 18px;
+    margin-left: -23px;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid rgba(255,255,255,0.4);
+    transform: rotate(-2deg);
+  }
+  .sticky-note strong { font-weight: 700; }
 
   footer {
     text-align: center;
-    color: rgba(255,255,255,0.5);
-    font-size: 0.75rem;
-    margin-top: 32px;
+    font-family: 'Share Tech Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted-panel);
+    font-size: 0.66rem;
+    margin-top: 20px;
+    opacity: 0.8;
   }
-  @media (prefers-color-scheme: dark) { footer { color: var(--muted); } }
 
-  #map {
-    height: 260px;
-    border-radius: 16px;
-    margin: 20px 0;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-    border: 1px solid var(--border);
+  .mw-pin {
+    width: 13px; height: 13px; border-radius: 50%;
+    background: var(--gold);
+    border: 2px solid #2a1d00;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
   }
   .you-pin {
     width: 16px; height: 16px; border-radius: 50%;
-    background: #2563eb; border: 3px solid white;
-    box-shadow: 0 0 0 2px #2563eb, 0 2px 6px rgba(0,0,0,0.4);
+    background: var(--cal-blue); border: 3px solid white;
+    box-shadow: 0 0 0 2px var(--cal-blue), 0 2px 6px rgba(0,0,0,0.4);
+  }
+  .leaflet-control-zoom a {
+    background: var(--panel-2) !important;
+    color: var(--text-panel) !important;
+    border-color: rgba(255,255,255,0.1) !important;
+  }
+  .leaflet-control-zoom { border: none !important; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .leaflet-popup-content-wrapper { border-radius: 10px; }
+  .leaflet-popup-content strong { font-family: 'Oswald', sans-serif; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
   }
 </style>
 </head>
 <body>
 <main>
-  <div class="badge">🔥</div>
-  <h1>Nearest Microwave</h1>
-  <p class="subtitle">Finds the closest microwave to you on the UC&nbsp;Berkeley campus.</p>
+  <div class="appliance">
+    <div class="vents" aria-hidden="true"></div>
+    <h1>Nearest Microwave</h1>
+    <p class="subtitle">Punch in your location, find the closest reheat spot on campus.</p>
 
-  <div id="map"></div>
+    <div class="window">
+      <div id="map"></div>
+    </div>
 
-  <button id="go">
-    <span class="spinner"></span>
-    <span class="btn-label">Find nearest microwave</span>
-  </button>
-  <p id="status"></p>
+    <div class="display">
+      <span class="display-label" id="display-label">Ready</span>
+      <span class="display-time" id="display-time">--:--</span>
+    </div>
 
-  <details id="help">
-    <summary>Location blocked or not working?</summary>
-    <p>On iPhone: <strong>Settings → Privacy &amp; Security → Location Services → Safari Websites</strong> → set to <strong>"Ask Next Time"</strong>, then reload this page and tap the button again. (If you don't see "Safari Websites" there, try <strong>Settings → Apps → Safari → Location</strong> instead.)</p>
-  </details>
+    <button id="go">
+      <span class="btn-label">Start</span>
+    </button>
+    <p id="status" role="status" aria-live="polite"></p>
 
-  <div id="result">
-    <p class="r-eyebrow">Closest to you</p>
-    <h2 id="r-name"></h2>
-    <span class="r-dist-pill" id="r-dist"></span>
-    <p id="r-notes"></p>
-    <a id="r-link" target="_blank" rel="noopener">Walking directions →</a>
+    <div id="result" aria-live="polite">
+      <p class="r-eyebrow">Closest to you</p>
+      <h2 id="r-name"></h2>
+      <span class="r-dist-pill" id="r-dist"></span>
+      <p id="r-notes"></p>
+      <a id="r-link" target="_blank" rel="noopener">Get directions →</a>
+    </div>
+
+    <details id="help">
+      <summary>Location blocked or not working?</summary>
+      <p class="sticky-note">On iPhone: <strong>Settings → Privacy &amp; Security → Location Services → Safari Websites</strong> → set to <strong>"Ask Next Time"</strong>, then reload this page and hit Start again. (Don't see "Safari Websites"? Try <strong>Settings → Apps → Safari → Location</strong> instead.) — mgmt</p>
+    </details>
   </div>
 
-  <footer>Data: food.berkeley.edu foodscape map</footer>
+  <footer>Model NM-2026 · UC Berkeley · Data: food.berkeley.edu foodscape map</footer>
 </main>
 
 <script>
@@ -251,6 +359,8 @@ const MICROWAVES = [
   { name: "Valley Life Sciences Building Microwave", lat: 37.871513, lon: -122.261768, notes: "In Micro Yali's cafe; pay 50 cents to use" },
 ];
 
+const WALK_MPS = 1.34; // average walking speed, ~3 mph
+
 function haversineMeters(lat1, lon1, lat2, lon2) {
   const R = 6371000;
   const toRad = d => d * Math.PI / 180;
@@ -261,17 +371,37 @@ function haversineMeters(lat1, lon1, lat2, lon2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
+function formatWalk(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 const btn = document.getElementById('go');
 const status = document.getElementById('status');
 const result = document.getElementById('result');
+const displayLabel = document.getElementById('display-label');
+const displayTime = document.getElementById('display-time');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// map center: centroid of the 13 microwave points
+// map center: centroid of the microwave points
 const CENTER = [
   MICROWAVES.reduce((s, m) => s + m.lat, 0) / MICROWAVES.length,
   MICROWAVES.reduce((s, m) => s + m.lon, 0) / MICROWAVES.length,
 ];
 
-let map, markers = {}, youMarker, youIcon;
+let map, markers = {}, youMarker, youIcon, mwIcon;
+let scrambleId = null;
+
+function startScramble() {
+  if (reduceMotion) return;
+  scrambleId = setInterval(() => {
+    displayTime.textContent = `${Math.floor(Math.random() * 9)}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`;
+  }, 80);
+}
+function stopScramble() {
+  if (scrambleId) { clearInterval(scrambleId); scrambleId = null; }
+}
 
 function initMap() {
   map = L.map('map', { zoomControl: false }).setView(CENTER, 15);
@@ -281,8 +411,9 @@ function initMap() {
   }).addTo(map);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
 
+  mwIcon = L.divIcon({ className: '', html: '<div class="mw-pin"></div>', iconSize: [13, 13] });
   for (const m of MICROWAVES) {
-    const marker = L.marker([m.lat, m.lon]).addTo(map)
+    const marker = L.marker([m.lat, m.lon], { icon: mwIcon }).addTo(map)
       .bindPopup(`<strong>${m.name}</strong><br>${m.notes}`);
     markers[m.name] = marker;
   }
@@ -296,9 +427,11 @@ btn.addEventListener('click', () => {
     return;
   }
   btn.disabled = true;
-  btn.classList.add('loading');
-  status.textContent = "Locating you…";
+  status.textContent = '';
   result.classList.remove('show');
+  displayTime.classList.remove('blink', 'settle');
+  displayLabel.textContent = 'Locating…';
+  startScramble();
 
   navigator.geolocation.getCurrentPosition(pos => {
     const { latitude, longitude } = pos.coords;
@@ -307,27 +440,34 @@ btn.addEventListener('click', () => {
       const d = haversineMeters(latitude, longitude, m.lat, m.lon);
       if (d < best) { best = d; nearest = m; }
     }
+    stopScramble();
+    const walkSec = best / WALK_MPS;
+    displayLabel.textContent = 'Walk time';
+    displayTime.textContent = formatWalk(walkSec);
+    displayTime.classList.add('settle');
+
     document.getElementById('r-name').textContent = nearest.name;
     document.getElementById('r-notes').textContent = nearest.notes;
-    document.getElementById('r-dist').textContent = `${Math.round(best)} m · ${(best / 1609.34).toFixed(2)} mi`;
+    document.getElementById('r-dist').textContent = `${formatWalk(walkSec)} walk · ${Math.round(best)} m`;
     document.getElementById('r-link').href =
       `https://www.google.com/maps/dir/?api=1&destination=${nearest.lat},${nearest.lon}&travelmode=walking`;
     result.style.display = 'block';
     requestAnimationFrame(() => result.classList.add('show'));
-    status.textContent = '';
     btn.disabled = false;
-    btn.classList.remove('loading');
 
     if (youMarker) youMarker.setLatLng([latitude, longitude]);
     else youMarker = L.marker([latitude, longitude], { icon: youIcon }).addTo(map).bindPopup('You are here');
     map.fitBounds([[latitude, longitude], [nearest.lat, nearest.lon]], { padding: [40, 40], maxZoom: 17 });
     markers[nearest.name].openPopup();
   }, err => {
+    stopScramble();
+    displayLabel.textContent = 'Error';
+    displayTime.textContent = 'Err';
+    displayTime.classList.add('blink');
     status.textContent = err.code === err.PERMISSION_DENIED
       ? "Location blocked. On iPhone: Settings → Privacy & Security → Location Services → Safari Websites → \"Ask Next Time\", then reload and try again."
       : "Couldn't get your location: " + err.message;
     btn.disabled = false;
-    btn.classList.remove('loading');
   }, { enableHighAccuracy: true, timeout: 10000 });
 });
 
