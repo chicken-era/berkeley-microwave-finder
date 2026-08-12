@@ -295,7 +295,9 @@ btn.addEventListener('click', () => {
     map.fitBounds([[latitude, longitude], [nearest.lat, nearest.lon]], { padding: [40, 40], maxZoom: 17 });
     markers[nearest.name].openPopup();
   }, err => {
-    status.textContent = "Couldn't get your location: " + err.message;
+    status.textContent = err.code === err.PERMISSION_DENIED
+      ? "Location blocked. On iPhone: Settings → Privacy & Security → Location Services → Safari Websites → \"Ask Next Time\", then reload and try again."
+      : "Couldn't get your location: " + err.message;
     btn.disabled = false;
     btn.classList.remove('loading');
   }, { enableHighAccuracy: true, timeout: 10000 });
