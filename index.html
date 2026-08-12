@@ -2,31 +2,190 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#003262">
 <title>Nearest Microwave — UC Berkeley</title>
 <style>
-  body { font-family: -apple-system, system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px 16px; background: #fafafa; color: #1a1a1a; }
-  h1 { font-size: 1.3rem; }
-  button { width: 100%; padding: 14px; font-size: 1.05rem; border: none; border-radius: 10px; background: #003262; color: white; }
-  button:disabled { opacity: 0.5; }
-  #result { margin-top: 20px; padding: 16px; border-radius: 10px; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.1); display: none; }
-  #result h2 { margin: 0 0 4px; font-size: 1.15rem; }
-  #result p { margin: 4px 0; color: #444; }
-  #result a { display: inline-block; margin-top: 10px; color: #003262; font-weight: 600; }
-  #status { color: #666; margin-top: 12px; font-size: 0.9rem; }
+  :root {
+    --blue: #003262;
+    --blue-light: #00538c;
+    --gold: #FDB515;
+    --bg: #f2f4f7;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --border: #e6e8ec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1116;
+      --card: #171b22;
+      --text: #f2f3f5;
+      --muted: #9aa3af;
+      --border: #262b33;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    margin: 0;
+    min-height: 100dvh;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, var(--blue-light) 0%, var(--blue) 45%, var(--bg) 46%) fixed;
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+  }
+  main { width: 100%; max-width: 440px; padding-top: 56px; padding-bottom: 40px; }
+
+  .badge {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px;
+    margin: 0 auto 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
+  h1 {
+    color: white;
+    text-align: center;
+    font-size: 1.5rem;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    text-align: center;
+    color: rgba(255,255,255,0.75);
+    font-size: 0.95rem;
+    margin: 0 0 28px;
+    line-height: 1.4;
+  }
+
+  button#go {
+    width: 100%;
+    padding: 16px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 14px;
+    background: var(--gold);
+    color: var(--blue);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform 0.1s ease, opacity 0.2s ease;
+  }
+  button#go:active { transform: scale(0.98); }
+  button#go:disabled { opacity: 0.7; }
+
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2.5px solid rgba(0,50,98,0.25);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  button#go.loading .spinner { display: inline-block; }
+  button#go.loading .btn-label { opacity: 0.8; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #status {
+    text-align: center;
+    color: rgba(255,255,255,0.85);
+    font-size: 0.9rem;
+    margin: 14px 0 0;
+    min-height: 1.2em;
+  }
+
+  #result {
+    margin-top: 22px;
+    padding: 20px;
+    border-radius: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    display: none;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  #result.show { display: block; opacity: 1; transform: translateY(0); }
+
+  .r-eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--gold);
+    margin: 0 0 6px;
+  }
+  #r-name { margin: 0 0 8px; font-size: 1.2rem; line-height: 1.3; }
+  .r-dist-pill {
+    display: inline-block;
+    background: rgba(0,50,98,0.08);
+    color: var(--blue);
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .r-dist-pill { background: rgba(253,181,21,0.15); color: var(--gold); }
+  }
+  #r-notes {
+    margin: 0 0 18px;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+  #r-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 13px;
+    background: var(--blue);
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 12px;
+    font-size: 0.95rem;
+  }
+
+  footer {
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.75rem;
+    margin-top: 32px;
+  }
+  @media (prefers-color-scheme: dark) { footer { color: var(--muted); } }
 </style>
 </head>
 <body>
-<h1>🔥 Nearest Microwave</h1>
-<p>Finds the closest microwave to you on the UC Berkeley campus.</p>
-<button id="go">Find nearest microwave</button>
-<p id="status"></p>
-<div id="result">
-  <h2 id="r-name"></h2>
-  <p id="r-notes"></p>
-  <p id="r-dist"></p>
-  <a id="r-link" target="_blank" rel="noopener">Open walking directions →</a>
-</div>
+<main>
+  <div class="badge">🔥</div>
+  <h1>Nearest Microwave</h1>
+  <p class="subtitle">Finds the closest microwave to you on the UC&nbsp;Berkeley campus.</p>
+
+  <button id="go">
+    <span class="spinner"></span>
+    <span class="btn-label">Find nearest microwave</span>
+  </button>
+  <p id="status"></p>
+
+  <div id="result">
+    <p class="r-eyebrow">Closest to you</p>
+    <h2 id="r-name"></h2>
+    <span class="r-dist-pill" id="r-dist"></span>
+    <p id="r-notes"></p>
+    <a id="r-link" target="_blank" rel="noopener">Walking directions →</a>
+  </div>
+
+  <footer>Data: food.berkeley.edu foodscape map</footer>
+</main>
 
 <script>
 // ponytail: hardcoded snapshot from food.berkeley.edu/foodscape-map (selfservice.geojson, Type=microwave), pulled 2026-08-11.
@@ -57,15 +216,19 @@ function haversineMeters(lat1, lon1, lat2, lon2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-document.getElementById('go').addEventListener('click', () => {
-  const status = document.getElementById('status');
-  const btn = document.getElementById('go');
+const btn = document.getElementById('go');
+const status = document.getElementById('status');
+const result = document.getElementById('result');
+
+btn.addEventListener('click', () => {
   if (!navigator.geolocation) {
     status.textContent = "Geolocation isn't supported on this browser.";
     return;
   }
   btn.disabled = true;
+  btn.classList.add('loading');
   status.textContent = "Locating you…";
+  result.classList.remove('show');
 
   navigator.geolocation.getCurrentPosition(pos => {
     const { latitude, longitude } = pos.coords;
@@ -76,15 +239,18 @@ document.getElementById('go').addEventListener('click', () => {
     }
     document.getElementById('r-name').textContent = nearest.name;
     document.getElementById('r-notes').textContent = nearest.notes;
-    document.getElementById('r-dist').textContent = `${Math.round(best)} m away (${(best / 1609.34).toFixed(2)} mi)`;
+    document.getElementById('r-dist').textContent = `${Math.round(best)} m · ${(best / 1609.34).toFixed(2)} mi`;
     document.getElementById('r-link').href =
       `https://www.google.com/maps/dir/?api=1&destination=${nearest.lat},${nearest.lon}&travelmode=walking`;
-    document.getElementById('result').style.display = 'block';
+    result.style.display = 'block';
+    requestAnimationFrame(() => result.classList.add('show'));
     status.textContent = '';
     btn.disabled = false;
+    btn.classList.remove('loading');
   }, err => {
     status.textContent = "Couldn't get your location: " + err.message;
     btn.disabled = false;
+    btn.classList.remove('loading');
   }, { enableHighAccuracy: true, timeout: 10000 });
 });
 </script>
