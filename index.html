@@ -216,6 +216,18 @@
   }
   .help-note strong { color: var(--text); font-weight: 600; }
 
+  .report-link {
+    display: block;
+    text-align: center;
+    margin-top: 14px;
+    color: var(--accent-ink);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .report-link:hover { text-decoration: underline; }
+  .report-link:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+
   footer {
     text-align: center;
     color: var(--muted);
@@ -276,9 +288,11 @@
       <summary>Location blocked or not working?</summary>
       <p class="help-note">On iPhone: <strong>Settings → Privacy &amp; Security → Location Services → Safari Websites</strong> → set to <strong>"Ask Next Time"</strong>, then reload this page and try again. Don't see "Safari Websites"? Try <strong>Settings → Apps → Safari → Location</strong> instead.</p>
     </details>
+
+    <a id="report-link" class="report-link" target="_blank" rel="noopener">Know of a spot we're missing, or one that's wrong? Report it →</a>
   </div>
 
-  <footer>UC Berkeley · Microwave locations verified Aug 11, 2026 from food.berkeley.edu — a spot may have moved since.</footer>
+  <footer>UC Berkeley · Microwave locations verified Aug 11, 2026 from food.berkeley.edu — a spot may have moved since. Community-corrected via GitHub.</footer>
 </main>
 
 <script>
@@ -330,6 +344,26 @@ const CENTER = [
 
 let map, markers = {}, youMarker, youIcon, mwIcon;
 
+const REPORT_REPO = 'chicken-era/berkeley-microwave-finder';
+const reportLink = document.getElementById('report-link');
+
+function buildReportUrl(lat, lon) {
+  const coordsLine = (lat != null)
+    ? `${lat.toFixed(6)}, ${lon.toFixed(6)}`
+    : 'not shared — allow location and re-open this link, or add manually';
+  const body = [
+    '**Type:** New microwave / Wrong location / Other (delete the ones that don\'t apply)',
+    '',
+    '**Building & room:**',
+    '',
+    '**Notes (floor, access, fees, etc.):**',
+    '',
+    `**Approximate coordinates:** ${coordsLine}`,
+  ].join('\n');
+  const params = new URLSearchParams({ title: 'Microwave location update', body });
+  return `https://github.com/${REPORT_REPO}/issues/new?${params.toString()}`;
+}
+
 function initMap() {
   map = L.map('map', { zoomControl: false }).setView(CENTER, 15);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -346,6 +380,7 @@ function initMap() {
   }
 
   youIcon = L.divIcon({ className: '', html: '<div class="you-pin"></div>', iconSize: [16, 16] });
+  reportLink.href = buildReportUrl();
 }
 
 function setStatus(text, showSpinner) {
@@ -394,6 +429,7 @@ btn.addEventListener('click', () => {
     else youMarker = L.marker([latitude, longitude], { icon: youIcon }).addTo(map).bindPopup('You are here');
     map.fitBounds([[latitude, longitude], [nearest.lat, nearest.lon]], { padding: [40, 40], maxZoom: 17 });
     markers[nearest.name].openPopup();
+    reportLink.href = buildReportUrl(latitude, longitude);
   }, err => {
     setStatus(
       err.code === err.PERMISSION_DENIED
